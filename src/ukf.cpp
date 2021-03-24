@@ -305,6 +305,10 @@ void UKF::UpdateLidar(MeasurementPackage meas_package)
   VectorXd z_pred = VectorXd(n_z);
   z_pred.fill(0.0);
 
+  // Measurement covariance matrix S
+  MatrixXd S = MatrixXd(n_z, n_z);
+  S.fill(0.0);
+
   /* Measurement prediction */
   for (int i = 0; i < (2 * n_aug_ + 1); ++i)
   {
@@ -326,6 +330,45 @@ void UKF::UpdateLidar(MeasurementPackage meas_package)
     z_pred = z_pred + (weights_(i) * Zsig.col(i));     
   }
 
+  // Calculate innovation covariance matrix S
+  for (int i = 0; i < (2 * n_aug_ + 1); ++i)
+  {
+    VectorXd z_diff = Zsig.col(i) - z_pred;
+    
+    S = S + weights_(i) * z_diff * z_diff.transpose();
+  }
+    
+  MatrixXd R = MatrixXd(n_z, n_z);
+  R << std_radr_ * std_radr_, 0.0, 0.0,
+       0.0, std_radphi_ * std_radphi_, 0.0, 
+       0.0, 0.0, std_radrd_ * std_radrd_;
+  
+  S = S + R;
+
+  // State updating
+  MatrixXd Tc = MatrixXd(n_x_, n_z); // State dimension X Measurement dimension 
+
+  for (int i = 0; i < (2 * n_aug_) + 1; ++i)
+  {
+    VectorXd x_diff = Xsig_pred_.col(i) - x_;
+    // Angle normalization
+    while (x_diff(3)> M_PI){ x_diff(3) -= 2.*M_PI; }
+    while (x_diff(3)< -M_PI){ x_diff(3) += 2.*M_PI; }
+
+    VectorXd z_diff = Zsig.col(i) - z_pred;
+
+    Tc = Tc + weights_(i) * x_diff * z_diff.transpose();
+  }
+
+  // Calculate Kalman gain K;
+  MatrixXd K = Tc * S.inverse();
+  VectorXd z = meas_package.raw_measurements_; // Incoming measurement 
+
+  VectorXd z_diff = z - z_pred; 
+
+  // Update state mean and covariance matrix
+  x_ = x_ + K * z_diff;
+  P_ = P_ - K * S * K.transpose();
 }
 
 void UKF::UpdateRadar(MeasurementPackage meas_package) {
