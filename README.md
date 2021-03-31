@@ -74,3 +74,16 @@ and performing clustering. This is similar to what was done in Sensor Fusion Lid
 This information is only accessible by people who are already enrolled in Sensor Fusion. 
 If you are enrolled, see the project page in the classroom
 for instructions and the project rubric.
+
+
+## Constant turn rate and velocity magnitude model (CTRV) 
+In order to experiment and understand different motion models, the course exhibited different motion models for object tracking, all of them provided different advantages and disadvatages depending on the application.
+
+For the Unscented Kalman Filter project the CTRV model was selected. Our prior model the Constant Velocity (CV) model provided good results in different scenarios; however, by making this assumption we simplify a lot the way the tracked object moves, as it also take turns.
+
+On the other hand, the CTVR model assumes that objects can move not only on straight line but they can also move at a constant turn rate with a constant velocity magnitude. By using this model we will have more accuracy in the motion prediction of the desired object
+
+
+![CTRV](https://user-images.githubusercontent.com/49252525/113061431-a298f100-9177-11eb-8301-e4b2d9871eaf.png)
+
+The CTRV now provides a 5 dimensional vector state. Which considers the object position in the cartesian plane (Px, Py), the Velocity magnitude (V), the Yaw angle and the Yaw rate.
